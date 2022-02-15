@@ -55,7 +55,7 @@ contract MerkleProof{
         }
         return hashArray;          
     }                                      
-    function log2(uint x) public pure returns (uint y){
+    function log2(uint x) private pure returns (uint y){
     assembly {
             let arg := x
             x := sub(x,1)
@@ -85,10 +85,10 @@ contract MerkleProof{
             y := add(y, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
         }  
     }
-    function getHashes() view private returns(bytes32[] memory){
+    function getHashes() public view returns(bytes32[] memory){
         return hashes;
     }
-    function getRoot() private view returns(bytes32){
+    function getRoot() public view returns(bytes32){
         return hashes[hashes.length-1];
     }
 }
