@@ -5,9 +5,15 @@ import MerkleProof from './build/MerkleProof.json';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
+const PREFIX ='MERKLE-TREE';
 
 function App() {
-  const [account, setaccount] = useState('0x0');
+  const [account, setaccount] = useState(()=>{
+    const key =PREFIX + 'address';
+    const account = localStorage.getItem(key);
+    if(account==null ||account==undefined) return '0x0';
+    return JSON.parse(account);
+  });
   const [arrayOfTransactions, setarrayOfTransactions] = useState([]);
   const [queryInputIndex, setqueryInputIndex] = useState('')
   const [queryInputTx, setqueryInputTx] = useState('');
@@ -25,15 +31,21 @@ function App() {
       try {
         const accounts =await window.ethereum.request({method:'eth_requestAccounts'});
         setaccount(accounts[0]);
+        const key =PREFIX + 'address';
+        localStorage.setItem(key,JSON.stringify(accounts[0]));
       } catch (error) {
         console.log(error.message)
       }
     }
     const accountWasChanged = (accounts) => {
       setaccount(accounts[0]);
+      const key =PREFIX + 'address';
+      localStorage.setItem(key,JSON.stringify(accounts[0]));
     }
     const disconnectAccount = ()=>{
       setaccount('0x0');
+      const key =PREFIX + 'address';
+      localStorage.setItem(key,JSON.stringify('0x0'));
     }
     window.ethereum.on('accountsChanged', accountWasChanged);
     window.ethereum.on('connect',connectAccount);
@@ -44,7 +56,7 @@ function App() {
     const signer =provider.getSigner();
     setsigner(signer);
 
-    const contractAddress =MerkleProof.networks["5777"].address;
+    const contractAddress =MerkleProof.networks["4"].address;
     const contractInstance =new ethers.Contract(contractAddress,MerkleProof.abi,signer);
     setcontract(contractInstance);
 
@@ -66,10 +78,11 @@ function App() {
     const transaction = await contract.inputTransaction(arrarray2);
     const receipt =await transaction.wait();
     // console.log(receipt);
+    console.log(arrarray2);
   }
   const submitQuery=async(e)=>{
     e.preventDefault();
-
+    console.log('Hey')
     try {
       const result =await contract.verify(queryInputIndex,ethers.utils.hexlify(queryInputTx));
       if(result===true){
@@ -96,6 +109,10 @@ function App() {
     } catch (error) {
         console.log(error.message); 
     }
+  }
+  const getArrayHandle=async ()=>{
+    const result =await contract.getHashes();
+    console.info(result);
   }
   // 0,0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
   return (
@@ -140,7 +157,8 @@ function App() {
               </Button>
 
         </Form>
-
+        <br></br>
+        <Button onClick ={getArrayHandle} variant="dark">get Array</Button>
         </Container>
     </div>
   );

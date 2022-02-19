@@ -4,10 +4,22 @@ pragma solidity^0.8.10;
 contract MerkleProof{
     bytes32[] public hashes;
     uint256 public count;
+    uint256 public finalLength;
+    bool public isOfPower2;
     function inputTransaction(string[] memory _transactions)public{
         count =_transactions.length;
-        for(uint i=0; i<count; i++){
-            hashes.push(keccak256(abi.encodePacked(_transactions[i])));
+        for(uint j=0; j<hashes.length; j++){
+            delete hashes[j];
+        }
+        isOfPower2 =(count != 0) && ((count & (count - 1)) == 0);
+        uint256 log =log2(count);
+        finalLength =2**log; 
+        for(uint i=0; i<finalLength; i++){
+            if(i<count){
+                hashes.push(keccak256(abi.encodePacked(_transactions[i])));
+            }else{
+                hashes.push(0x0000000000000000000000000000000000000000000000000000000000000000);
+            }
         }
         createMerkleTree();
     }
@@ -40,7 +52,7 @@ contract MerkleProof{
         return false;
     }
     function getHashArray(uint256 index) private view returns(bytes32[] memory ){
-        uint counter =log2(count);
+        uint counter =log2(finalLength);
         bytes32[] memory hashArray= new bytes32[](counter);
         
         for(uint i=0; i< counter; i++){
@@ -51,7 +63,7 @@ contract MerkleProof{
                 hashArray[i] =hashes[index-1];
                 
             }          
-            index =(index / 2)+count;  
+            index =(index / 2)+finalLength;  
         }
         return hashArray;          
     }                                      
@@ -94,6 +106,7 @@ contract MerkleProof{
 }
 
 // ["1","2","3","4","5","6","7","8"]
+// 0x0000000000000000000000000000000000000000000000000000000000000000,
 // 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6,
 // 0xad7c5bef027816a800da1736444fb58a807ef4c9603b7848673f7e3a68eb14a5,
 // 0x2a80e1ef1d7842f27f2e6be0972bb708b9a135c38860dbe73c27c3486c34f4de,
@@ -101,7 +114,7 @@ contract MerkleProof{
 // 0xceebf77a833b30520287ddd9478ff51abbdffa30aa90a8d655dba0e8a79ce0c1,
 // 0xe455bf8ea6e7463a1046a0b52804526e119b4bf5136279614e0b1e8e296a4e2d,
 // 0x52f1a9b320cab38e5da8a8f97989383aab0a49165fc91c737310e4f7e9821021,
-// 0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10
+// 0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10  
 
 // 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6,
 // 0xad7c5bef027816a800da1736444fb58a807ef4c9603b7848673f7e3a68eb14a5,
