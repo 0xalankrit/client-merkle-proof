@@ -1,5 +1,5 @@
-import {useEffect,useState} from 'react';
-import {Form ,Button,Container,Row, Col} from 'react-bootstrap';
+import {useEffect,useState,useRef} from 'react';
+import {Form ,Button,Container,Row, Col,Card,Badge} from 'react-bootstrap';
 import {ethers} from 'ethers';
 import MerkleProof from './build/MerkleProof.json';
 import { ToastContainer, toast } from 'react-toastify';
@@ -8,6 +8,11 @@ import './App.css';
 const PREFIX ='MERKLE-TREE';
 
 function App() {
+  
+  const backDiv = useRef(0);
+  const failureBadge = useRef(0);
+  const successBadge = useRef(0);
+
   const [account, setaccount] = useState(()=>{
     const key =PREFIX + 'address';
     const account = localStorage.getItem(key);
@@ -86,6 +91,9 @@ function App() {
     try {
       const result =await contract.verify(queryInputIndex,ethers.utils.hexlify(queryInputTx));
       if(result===true){
+        changeColorSuccess();
+        failureBadge.current.style.display='none'
+        successBadge.current.style.display='inline'
         toast.success('🦄 Your transaction is contained in the set of transactions', {
           position: "top-right",
           autoClose: 5000,
@@ -96,6 +104,9 @@ function App() {
           progress: undefined,
           });
       }else{
+        changeColorFailure();
+        successBadge.current.style.display='none'
+        failureBadge.current.style.display='inline'
         toast.error('🦄 Your transaction is not contained in the set of transactions', {
           position: "top-right",
           autoClose: 5000,
@@ -111,8 +122,20 @@ function App() {
     }
   }
   const getArrayHandle=async ()=>{
-    const result =await contract.getHashes();
-    console.info(result);
+    // const result =await contract.getHashes();
+    // console.info(result);
+  }
+  const changeColorSuccess =()=>{
+    backDiv.current.classList.add('success');    
+    setTimeout(()=>{
+      backDiv.current.classList.remove('success');
+    },3000)
+  }
+  const changeColorFailure =()=>{
+    backDiv.current.classList.add('failure');    
+    setTimeout(()=>{
+      backDiv.current.classList.remove('failure');
+    },3000)
   }
   // 0,0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6
   return (
@@ -143,22 +166,33 @@ function App() {
               </Button>
         </Form>
         <br></br>
-        <Form onSubmit={submitQuery}>
-
-              <Form.Group className="mb-3" controlId="formBasicEmail">
-                <Form.Control value ={queryInputIndex} onChange={(e)=>{setqueryInputIndex(e.target.value)}} type="number" placeholder="Enter your transaction index" />
-              </Form.Group>
-              <Form.Group className="mb-3" controlId="formBasicEmail">
-                <Form.Control value ={queryInputTx} onChange={(e)=>{setqueryInputTx(e.target.value)}} type="text" placeholder="Enter your transaction" />
-              </Form.Group>
-
+        <Card>
+          <Card.Header>
+            Rinkeby Testnet
+            <Badge ref= {successBadge} pill style={{display: 'none', float: 'right'}} bg="success">!</Badge>
+            <Badge ref= {failureBadge} pill style={{display: 'none', float: 'right'}} bg="danger">!</Badge>
+          </Card.Header>
+          <Card.Body ref={backDiv}>
+            
+            <Card.Text>
+              <Form onSubmit={submitQuery}>
+                <Form.Group className="mb-3" controlId="formBasicEmail">
+                  <Form.Control value ={queryInputIndex} onChange={(e)=>{setqueryInputIndex(e.target.value)}} type="number" placeholder="Enter your transaction index" />
+                </Form.Group>
+                <Form.Group className="mb-3" controlId="formBasicEmail">
+                  <Form.Control value ={queryInputTx} onChange={(e)=>{setqueryInputTx(e.target.value)}} type="text" placeholder="Enter your transaction" />
+                </Form.Group>
                 <Button variant="dark" type="submit">
                 Submit
-              </Button>
+                </Button>
+              </Form>
+            </Card.Text>
 
-        </Form>
+          </Card.Body>
+        </Card>
         <br></br>
-        <Button onClick ={getArrayHandle} variant="dark">get Array</Button>
+        {/* <Button onClick ={getArrayHandle} variant="dark">get Array</Button>
+        <div ref={backDiv}> Hey</div> */}
         </Container>
     </div>
   );
